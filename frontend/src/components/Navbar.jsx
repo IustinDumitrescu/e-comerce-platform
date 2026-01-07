@@ -1,92 +1,241 @@
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Divider,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+  ListItemIcon,
+  ListItemButton
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { Link, useLocation } from 'react-router-dom';
 import { paths } from '../config/routes';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-export default function Navbar({user, logout}) {
-    const location = useLocation();
-    const [anchorEl, setAnchorEl] = useState(null);
+const drawerWidth = 240;
 
-    const handleMenu = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
+export default function Navbar({ user, logout }) {
+  const location = useLocation();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+  const handleMenu = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
 
-    useEffect(() => {}, [])
+  const handleLogout = () => {
+    handleClose();
+    logout();
+  };
 
-    return (
-        <AppBar position="static" color="primary">
-            <Toolbar>
-                <Typography 
-                    component={Link} 
-                    to={paths.home} 
-                    variant="h6" 
-                    sx={{ 
-                        flexGrow: 1, 
-                        color: 'inherit', 
-                        textDecoration: 'none',
-                        fontWeight: 600
-                    }}
+  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
+
+  const initials = user?.email?.[0]?.toUpperCase() ?? '?';
+
+  const sidebarItems = [
+    { text: 'Dashboard', path: paths.dashboard, icon: <DashboardIcon color='primary'/> },
+    { text: 'My Products', path: paths.myProducts, icon: <Inventory2Icon color='primary'/> },
+    { text: 'Add Product', path: paths.addProduct, icon: <AddBoxIcon color='primary'/> },
+    { text: 'My Orders', path: paths.myOrders, icon: <ReceiptLongIcon color='primary'/> },
+  ];
+
+  return (
+    <>
+      <AppBar
+        position="sticky"
+        color="primary"
+        elevation={4}
+        sx={{
+          backdropFilter: 'blur(6px)',
+          borderBottom: '1px solid rgba(255,255,255,0.15)',
+        }}
+      >
+        <Toolbar sx={{ px: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {user && (
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={toggleDrawer}
+                sx={{ mr: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+
+            <Typography
+              component={Link}
+              to={paths.home}
+              variant="h6"
+              sx={{
+                color: 'inherit',
+                textDecoration: 'none',
+                fontWeight: 700,
+                letterSpacing: '.3px',
+              }}
+            >
+              My Shop
+            </Typography>
+          </Box>
+
+          {/* Right side: avatar or login/register */}
+          <Box>
+            {user ? (
+              <>
+                <IconButton
+                  onClick={handleMenu}
+                  color="inherit"
+                  sx={{ p: 0.5 }}
                 >
-                    My Shop
-                </Typography>
+                  <Avatar
+                    sx={{
+                      bgcolor: 'primary.main',
+                      borderColor: 'inherit',
+                      border: 0.5,
+                      width: 34,
+                      height: 34,
+                      fontSize: 16,
+                    }}
+                  >
+                    {initials}
+                  </Avatar>
+                </IconButton>
 
-                <Box>
-                  {user ? (
-                        <>
-                            <IconButton
-                                size="large"
-                                aria-label="account of current user"
-                                aria-controls="menu-appbar"
-                                aria-haspopup="true"
-                                onClick={handleMenu}
-                                color="inherit"
-                            >
-                                <AccountCircle />
-                            </IconButton>
-                            <Menu
-                                id="menu-appbar"
-                                anchorEl={anchorEl}
-                                anchorOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
-                                open={Boolean(anchorEl)}
-                                onClose={handleClose}
-                            >
-                                <MenuItem onClick={handleClose}>{user.email}</MenuItem>
-                                <MenuItem onClick={() => logout()}>Logout</MenuItem>
-                            </Menu>
-                        </>
-                    ) : (
-                        <>
-                            <Button
-                                color={location.pathname === paths.login ? 'secondary' : 'inherit'}
-                                component={Link}
-                                to={paths.login}
-                            >
-                                Login
-                            </Button>
-                            <Button
-                                color={location.pathname === paths.register ? 'secondary' : 'inherit'}
-                                component={Link}
-                                to={paths.register}
-                            >
-                                Register
-                            </Button>
-                        </>
-                    )}
-                </Box>
-            </Toolbar>
-        </AppBar>
-    );
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                >
+                  <MenuItem disabled sx={{ opacity: 0.9 }}>
+                    {user.email}
+                  </MenuItem>
+
+                  <Divider />
+
+                  <MenuItem
+                    component={Link}
+                    to={paths.dashboard}
+                    onClick={handleClose}
+                  >
+                    Dashboard
+                  </MenuItem>
+
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Button
+                  component={Link}
+                  to={paths.login}
+                  variant="text"
+                  color={location.pathname === paths.login ? 'secondary' : 'inherit'}
+                  sx={{ mr: 1 }}
+                >
+                  Login
+                </Button>
+
+                <Button
+                  component={Link}
+                  to={paths.register}
+                  variant="text"
+                  color={location.pathname === paths.register ? 'secondary' : 'inherit'}
+                >
+                  Register
+                </Button>
+              </>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {user && (
+        <Drawer
+          open={drawerOpen}
+          onClose={toggleDrawer}
+          variant="temporary"
+          sx={{
+            '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
+          }}
+        >
+         <Stack sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, padding: 1 }}>
+              <Box>
+                 <Avatar
+                    sx={{
+                      bgcolor: 'primary.main',
+                      borderColor: 'inherit',
+                      border: 0.5,
+                      width: 34,
+                      height: 34,
+                      fontSize: 16,
+                    }}
+                  >
+                    {initials}
+                  </Avatar>
+              </Box>
+
+              <Typography
+                textAlign='center'
+                ariant="subtitle1" fontWeight={600}
+              >
+                {user.name}
+              </Typography>
+          </Stack>
+          
+          <Divider/>
+
+          <Box sx={{flexGrow: 1}}>
+              <List style={{paddingTop: 0}}>
+                {sidebarItems.map((item, index) => (
+                    <ListItemButton
+                      key={item.text + index}
+                      component={Link}
+                      to={item.path}
+                      selected={location.pathname === item.path}
+                      onClick={toggleDrawer} // close drawer after click
+                    >
+                      <ListItemIcon>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text}/>
+                  </ListItemButton>
+                ))}
+              </List>
+          </Box>
+
+          <Box sx={{ p: 1, paddingTop: 0 }}>
+            <Divider sx={{ mb: 1 }} />
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon>
+                <ExitToAppIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
+          </Box>
+        </Drawer>
+      )}
+    </>
+  );
 }
