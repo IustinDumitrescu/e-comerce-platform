@@ -1,0 +1,7 @@
+FROM php:8.4.16-fpm-alpine3.22
+RUN apk add --no-cache postgresql-dev bash && docker-php-ext-install pdo pdo_pgsql pgsql
+WORKDIR /app
+COPY . .
+RUN chmod +x *.sh 
+RUN ./composer-install.sh
+EXPOSE 9000
