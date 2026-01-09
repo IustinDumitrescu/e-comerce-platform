@@ -4,6 +4,7 @@ import { paths } from "../../config/routes"
 import { useState } from "react";
 import Flash from "../Flash";
 import useLogin from "../../hooks/useLogin";
+import FormTemplate from "./FormTemplate";
 
 const USER_CREDENTIALS = {
     email: '',
@@ -55,21 +56,7 @@ export default function LoginForm() {
     };
 
     return (
-         <Paper
-            elevation={3}
-            sx={{
-                p: 4,
-                width: '100%',
-                borderRadius: 4
-            }}
-        >
-            <Flash
-                open={flash.message.length > 0}
-                message={flash.message}
-                severity={flash.type}
-                onClose={() => setFlash({...flash, message: ''})}
-            />
-
+        <FormTemplate flash={flash} setFlash={setFlash}>
             <Box component="form" onSubmit={handleSubmit}>
                 <Stack spacing={2}>
                     <Typography variant="h5" fontWeight={700} mb={0.5}>
@@ -122,6 +109,6 @@ export default function LoginForm() {
                 
                 </Stack>
             </Box>
-        </Paper>
+        </FormTemplate>
     )
 }

@@ -49,7 +49,7 @@ export default function Navbar({ user, logout }) {
   const sidebarItems = [
     { text: 'Dashboard', path: paths.dashboard, icon: <DashboardIcon color='primary'/> },
     { text: 'My Products', path: paths.myProducts, icon: <Inventory2Icon color='primary'/> },
-    { text: 'Add Product', path: paths.addProduct, icon: <AddBoxIcon color='primary'/> },
+    { text: 'Add Product', path: paths.newProduct, icon: <AddBoxIcon color='primary'/> },
     { text: 'My Orders', path: paths.myOrders, icon: <ReceiptLongIcon color='primary'/> },
   ];
 

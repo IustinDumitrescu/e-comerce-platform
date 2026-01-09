@@ -2,6 +2,7 @@ import { Box, TextField, Typography, Button, Stack, Paper, FormControlLabel, Che
 import { useState } from "react";
 import Flash from "../Flash";
 import useRegister from "../../hooks/useRegister";
+import FormTemplate from "./FormTemplate";
 
 const DEFAULT_ACC = {
     name: '',
@@ -79,23 +80,7 @@ export default function RegisterForm() {
     };
 
     return (
-        <Paper
-            elevation={3}
-            sx={{
-                p: 4,
-                width: '100%',
-                borderRadius: 4
-            }}
-        >
-            <Flash
-                open={flash.message.length > 0}
-                message={flash.message}
-                severity={flash.type}
-                onClose={() => {
-                   setFlash({...flash, message: ''})
-                }}
-            />
-
+        <FormTemplate flash={flash} setFlash={setFlash}>
             <Box component="form" onSubmit={handleSubmit}>
                 <Stack spacing={2}>
 
@@ -168,6 +153,6 @@ export default function RegisterForm() {
                     </Button>
                 </Stack>
             </Box>
-        </Paper>
+        </FormTemplate>
     )
 }
