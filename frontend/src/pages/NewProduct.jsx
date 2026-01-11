@@ -28,10 +28,6 @@ function NewProduct() {
                             My Products
                         </Button>
                     </Stack>
-                   
-                    <Typography component={'h5'} fontWeight={600}>
-                            Create New Product
-                    </Typography>
 
                     <NewProductForm/>
                 </Stack>

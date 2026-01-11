@@ -11,7 +11,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { paths } from '../config/routes';
 
-
 function MyProducts() {
     const navigate = useNavigate();
 
@@ -32,10 +31,12 @@ function MyProducts() {
 
      const columns = [
         { field: 'id', headerName: 'ID', width: 80 },
-        { field: 'name', headerName: 'Name', flex: 1 },
-        { field: 'category', headerName: 'Category', width: 140 },
+        { field: 'title', headerName: 'Name', flex: 120 },
+        { field: 'category', headerName: 'Category', width: 120, sortable: false },
         { field: 'price', headerName: 'Price', width: 120 },
-        { field: 'stock', headerName: 'Stock', width: 120 },
+        { field: 'active', headerName: 'Active', width: 120},
+        { field: 'createdAt', headerName: 'Created At', width: 120 },
+        { field: 'updatedAt', headerName: 'Updated At', width: 120 },
         {
             field: 'actions',
             headerName: 'Actions',
@@ -94,7 +95,7 @@ function MyProducts() {
                         rowCount={data ? data.length : 0}
                         columns={columns}
                         autoHeight
-                        pageSizeOptions={[5, 10, 25]}
+                        pageSizeOptions={[10, 20, 30]}
                         paginationMode='server'
                         sortingMode='server'
                         filterMode='server'
