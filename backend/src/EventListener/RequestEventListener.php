@@ -15,16 +15,19 @@ class RequestEventListener
     }
 
     public function onKernelRequest(RequestEvent $event)
-    {
+    {   
         $request = $event->getRequest();
 
+        $pathInfo = $request->getPathInfo();
         
-        if (!str_starts_with($request->getPathInfo(), '/api')) {
+        if (!str_starts_with($pathInfo, '/api')) {
             return;
         }
 
         $token = $request->headers->get('X-Frontend-Token');
-        if ($token !== $this->frontendToken || !$request->isXmlHttpRequest()) {
+        if (!str_starts_with($pathInfo, '/api/images') 
+            && ($token !== $this->frontendToken || !$request->isXmlHttpRequest())
+        ) {
 
             $event->setResponse(new JsonResponse([
                 'error' => 'Invalid frontend token'

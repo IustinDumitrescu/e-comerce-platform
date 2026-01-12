@@ -6,14 +6,62 @@ use App\Entity\Product;
 use App\Repository\ProductRepository;
 use App\Service\ProductService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-
 class ProductsController extends AbstractController 
 {
+    #[Route(path: '/api/images/product/{fileName}', name: 'product_images', methods:['GET'])]
+    public function productImages(
+       ProductService $productService,
+       string $fileName
+    ) 
+    {
+        $file = $productService->getProductImage($fileName);
+
+        if (!$file) {
+            return new Response('File not found', 404);
+        }
+
+        $response = new BinaryFileResponse($file);
+        $response->setPublic();           // mark as cacheable
+        $response->setMaxAge(3600);       // cache 1 hour
+        $response->setSharedMaxAge(3600); // for proxies
+        $response->headers->addCacheControlDirective('must-revalidate', true);
+        $response->headers->set('Content-Type', mime_content_type($file));
+
+        return $response;
+    }
+
+    #[Route(path: '/api/products', name: 'products_listing')]
+    public function getProducts(ProductRepository $productRepository)
+    {
+        $products = $productRepository->findBy([], ["createdAt" => "DESC"]);
+
+        return new JsonResponse($this->normalizeProducts($products));
+    }
+
+    #[Route(path: '/api/products/product-{id}', name: 'view_product', requirements:["id" => "\d+"])]
+    public function viewMyProduct(
+        ProductRepository $productRepository,
+        int $id
+    ) 
+    {
+        $product = $productRepository->find($id);
+
+        if (!$product) {
+             return new JsonResponse([
+                'status' => 'error',
+                'message' => 'You must be logged in to create a product'
+            ], 401);
+        }
+
+        return new JsonResponse($this->normalizeProducts([$product])[0]);
+    }
+
     #[Route(path: '/api/my-products', name: 'my_products')]
     public function myProducts(Request $request, ProductRepository $productRepository) 
     {
@@ -39,6 +87,42 @@ class ProductsController extends AbstractController
         $products = $productRepository->getMyProducts($params, $user, $page, $pageSize);    
 
         return new JsonResponse($this->normalizeProducts($products));
+    }
+
+    #[Route(path: '/api/my-products/edit/{id}', name: 'my_products_edit', methods:['POST'], requirements:['id' => '\d+'])]
+    public function editProduct(
+        Request $request,
+        ProductService $productService,
+        ProductRepository $productRepository,
+        int $id
+    ) 
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You must be logged in to create a product'
+            ], 401); // 401 Unauthorized
+        }
+
+        $product = $productRepository->findOneBy(["id" => $id, "owner" => $user]);
+
+        if (!$product) {
+            return new JsonResponse(['error' => 'Product not found', 404]);
+        }
+
+        $result = $productService->createProduct(
+            $user,
+            $request->request->all(), 
+            $request->files->get('image'),
+            $product
+        );
+
+         return new JsonResponse(
+            $result, 
+            $result["type"] === 'error' ? Response::HTTP_BAD_REQUEST : 200
+        );
     }
 
     #[Route(path: '/api/my-products/new', name: 'my_products_new', methods:['POST'])]
@@ -88,7 +172,9 @@ class ProductsController extends AbstractController
             "description" => $product->getDescription(),
             "price" => $product->getPrice(),
             "category" => $product->getProductCategory()->getName(),
+            "categoryId" => $product->getProductCategory()->getId(),
             "active" => $product->isActive(),
+            "image" => $product->getImage(),
             "createdAt" => $product->getCreatedAt()->format('d.m.Y H:i'),
             "updatedAt" => $product->getUpdatedAt()?->format('d.m.Y H:i')
         ], $products); 

@@ -34,7 +34,13 @@ function MyProducts() {
         { field: 'title', headerName: 'Name', flex: 120 },
         { field: 'category', headerName: 'Category', width: 120, sortable: false },
         { field: 'price', headerName: 'Price', width: 120 },
-        { field: 'active', headerName: 'Active', width: 120},
+        { field: 'active', headerName: 'Active', width: 120, renderCell: (params) => (
+            <Box height={'100%'} width={'100%'} display={'flex'} alignItems={'center'}>
+                <Typography fontWeight={600} textAlign={'center'} color={params.row.active ? 'primary': 'secondary'}>
+                    {params.row.active ? 'Yes': 'No'}
+                </Typography>
+            </Box>
+        )},
         { field: 'createdAt', headerName: 'Created At', width: 120 },
         { field: 'updatedAt', headerName: 'Updated At', width: 120 },
         {
@@ -43,22 +49,22 @@ function MyProducts() {
             width: 140,
             sortable: false,
             renderCell: (params) => (
-                <Stack direction="row" spacing={1}>
-                <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => console.log('view', params.row.id)}
-                >
-                    <VisibilityIcon fontSize="small" />
-                </IconButton>
+                <Stack direction="row" spacing={1} height={'100%'} width={'100%'} alignItems={'center'}>
+                    <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => navigate(paths.viewProduct.replace(':id', params.row.id))}
+                    >
+                        <VisibilityIcon fontSize="small" />
+                    </IconButton>
 
-                <IconButton
-                    size="small"
-                    color="secondary"
-                    onClick={() => console.log('edit', params.row.id)}
-                >
-                    <EditIcon fontSize="small" />
-                </IconButton>
+                    <IconButton
+                        size="small"
+                        color="secondary"
+                        onClick={() => navigate(paths.editProduct.replace(':id', params.row.id))}
+                    >
+                        <EditIcon fontSize="small" />
+                    </IconButton>
                 </Stack>
             ),
         },
@@ -67,11 +73,11 @@ function MyProducts() {
     return (
         <LoggedRoute>
             <UnloggedLayout>
-                <Header
-                    title={'My Products | My Portfolio App'}
-                    metaName={'description'}
-                    metaContent={'See your products and modify them'}
-                />
+                    <Header
+                        title={'My Products | My Portfolio App'}
+                        metaName={'description'}
+                        metaContent={'See your products and modify them'}
+                    />
 
                 <Box sx={{ p: 4 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -88,7 +94,6 @@ function MyProducts() {
                         </Button>
                     </Stack>
 
-                    {/* Table */}
                     <DataGrid
                         loading={isLoading}
                         rows={data || 0}

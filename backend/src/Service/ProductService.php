@@ -26,17 +26,24 @@ class ProductService
     {
     }
 
-    public function createProduct(User $user, array $productItems, ?UploadedFile $image): array 
+    public function createProduct(
+        User $user, 
+        array $productItems, 
+        ?UploadedFile $image,
+        ?Product $oldProd = null
+    ): array 
     {
-        $defaultDir = $this->parameterBag->get('kernel.project_dir') . '/public/uploads/products'; ;
+        $oldImage = $oldProd?->getImage();
 
-        $product = new Product();
+        $defaultDir = $this->parameterBag->get('kernel.project_dir') . '/public/uploads/products';
+
+        $product = ($oldProd ?? (new Product()));
         
         $product
             ->setOwner($user)
             ->setTitle($productItems["name"] ?? '')
             ->setDescription($productItems["description"] ?? '')
-            ->setActive($productItems["active"] ?? true)
+            ->setActive(!empty($productItems["active"]) && $productItems["active"] === "true")
             ->setPrice($productItems["price"] ?? '');
 
         $errors = $this->validator->validate($product);    
@@ -53,28 +60,38 @@ class ProductService
 
         $product->setProductCategory($category);
 
-        if (!$image) {
-            return ["type" => "error", "message" => "No image found"];
+        if (!$image && !$oldProd) {
+            return ["type" => "error", "message" => "Image must have at most 2MB and must be jpeg, png or webp"];
         }
         
-        try {
-            $newFilename = uniqid() . '.' . $image->guessExtension();
+        if ($image) {
+            if ($image->getSize() > (2 * 1024 * 1024) || !in_array($image->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'])) {
+              return ["type" => "error", "message" => "Image must have at most 2MB and must be jpeg, png or webp"];
+            }
 
-            $image->move($defaultDir, $newFilename);
+            try {
+                $newFilename = uniqid() . '.' . $image->guessExtension();
 
-            $product->setImage($newFilename);
-        } catch (\Throwable) {
-            return ["type" => "error", "message" => "Error uploading the image"];
+                $image->move($defaultDir, $newFilename);
+
+                $product->setImage($newFilename);
+            } catch (\Throwable) {
+                return ["type" => "error", "message" => "Error uploading the image"];
+            }
+
+            if ($oldImage && file_exists($defaultDir . '/' . $oldImage)) {
+                unlink($defaultDir . '/' . $oldImage);
+            }
         }
 
-        if ($this->productRepository->exists($title, $category, $user)) {
+        if (!$oldProd && $this->productRepository->exists($title, $category, $user)) {
             return ["type" => "error", "message" => "You already have a product with the same name"];
         }        
 
         $this->productRepository->save(
             $product
-                ->setCreatedAt((new \DateTime()))
-                ->setUpdatedAt((new \DateTime()))
+                ->setCreatedAt($oldProd ? $product->getCreatedAt() : (new \DateTime()))
+                ->setUpdatedAt($oldProd ? (new \DateTime()): null)
         );
        
         return ["type" => "success", "message" => "Product created"];
@@ -82,8 +99,6 @@ class ProductService
 
     public function getCategories(): array
     {
-        $this->invalidateCache();
-
         return $this->cache->get('category_list', function (ItemInterface $item) {
             $item->expiresAfter(14400);
             $categoryArr = $this->categoryRepository->findAll();
@@ -100,6 +115,17 @@ class ProductService
 
             return $cArr;
         });
+    }
+
+    public function getProductImage(string $fileName): ?string
+    {
+        $defaultDir = $this->parameterBag->get('kernel.project_dir') . '/public/uploads/products/';
+
+        if (file_exists($defaultDir . $fileName)) {
+            return $defaultDir . $fileName;
+        }
+
+        return null;
     }
 
     public function invalidateCache(): void

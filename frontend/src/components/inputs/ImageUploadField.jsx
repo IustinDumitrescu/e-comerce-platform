@@ -1,25 +1,21 @@
-import { useEffect, useMemo } from "react";
 import { Box, Card, CardContent, Typography } from "@mui/material";
 
 export default function ImageUploadField({ file, setImgUrl }) {
-  const previewUrl = useMemo(
-    () => (file ? URL.createObjectURL(file) : null),
-    [file]
-  );
+  const previewUrl = (() => {
+     if (!file) {
+      return null;
+     }
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
-      }
-    }
-  }, [previewUrl]);
+     if (typeof file === 'string') {
+      return '/api/images/product/' + file;
+     }
+
+     return URL.createObjectURL(file);
+  })();
 
   const handleFile = (e) => {
     const f = e.target.files?.[0] || e.dataTransfer?.files?.[0];
     if (f) { 
-        console.log(f);
-
         setImgUrl(f) 
     };
   };

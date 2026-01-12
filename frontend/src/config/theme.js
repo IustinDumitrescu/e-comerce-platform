@@ -5,7 +5,7 @@ const themeConfig = {
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#EF476F',       // Rose
+      main: '#14B8A6',  // Teal/Cyan
       contrastText: '#ffffff',
     },
     background: {

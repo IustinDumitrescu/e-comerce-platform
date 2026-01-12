@@ -27,7 +27,7 @@ class Product
     #[Assert\NotBlank(message: "Description is required")]
     #[Assert\Length(
         min: 30,
-        max: 300,
+        max: 1000,
         minMessage: "Description must be at least {{ limit }} characters long",
         maxMessage: "Description cannot be longer than {{ limit }} characters"
     )]

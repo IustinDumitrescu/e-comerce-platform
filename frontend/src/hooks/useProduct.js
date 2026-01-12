@@ -3,11 +3,11 @@ import api from "../config/api";
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEY_MY_PRODUCTS } from './useMyProducts'
 
-export default function useNewProduct() {
+export default function useProduct() {
     const [loading, setLoading] = useState(false);
     const queryClient = useQueryClient();
 
-    const createNewProduct = async (query) => {
+    const doProduct = async (url, query) => {
         setLoading(true);
 
         const formData = new FormData();
@@ -17,9 +17,10 @@ export default function useNewProduct() {
         formData.append("price", query.price);
         formData.append("categoryId", query.categoryId);
         formData.append("description", query.description);
+        formData.append("active", query.active);
         
         try {
-            const result = await api.post('/my-products/new', formData, 
+            const result = await api.post(url, formData, 
                 {
                     headers: {
                         "Content-Type": "multipart/form-data"
@@ -39,5 +40,5 @@ export default function useNewProduct() {
         }
     };
 
-    return {createNewProduct, loading}
+    return {doProduct, loading}
 }

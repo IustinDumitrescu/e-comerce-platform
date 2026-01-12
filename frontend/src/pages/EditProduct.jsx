@@ -1,25 +1,40 @@
-import { useState } from 'react';
-import { Button, Stack } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import UnloggedLayout from '../layouts/UnloggedLayout';
 import LoggedRoute from './LoggedRoute';
-import { ArrowBack } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import useViewProduct from '../hooks/useViewProduct';
+import { useEffect, useState } from 'react';
 import { paths } from '../config/routes';
+import { Stack, Button} from '@mui/material';
 import ProductForm from '../components/forms/ProductForm';
+import { ArrowBack } from '@mui/icons-material';
+import LoadingScreen from '../components/LoadingScreen';
 
-const NEW_PRODUCT = {
-    title: '',
-    description: '',
-    price: 0,
-    categoryId: '',
-    image: null, 
-    active: true
-};
+function EditProduct() {
+    const { id } = useParams();
+    const {getProduct, loading} = useViewProduct();
 
-function NewProduct() {
+    const [product, setProduct] = useState(null);
     const navigate = useNavigate();
-    const [newProduct, setNewProduct] = useState(NEW_PRODUCT); 
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            const result = await getProduct(id);
+        
+            if (!result || result.type === 'error') {
+                navigate(paths.myProducts, { replace: true });
+                return;
+            }
+
+            setProduct(result);
+        };
+
+        fetchProduct();
+    }, [])
+
+    if (loading || !product) {
+        return <LoadingScreen/>;
+    }
 
     return (
         <LoggedRoute>
@@ -29,6 +44,7 @@ function NewProduct() {
                     metaName={'description'}
                     metaContent={'Create a new product'}
                 />
+
                 <Stack spacing={3} sx={{padding: 5}}>
                     <Stack sx={{ flexDirection: 'row', alignItems: 'center'}} spacing={2}>
                         <Button 
@@ -41,15 +57,15 @@ function NewProduct() {
                     </Stack>
 
                     <ProductForm 
-                        newProduct={newProduct} 
-                        setNewProduct={setNewProduct}
-                        url={'/my-products/new'}
-                        setProductOnResult={() => { setNewProduct(NEW_PRODUCT); }}
+                        newProduct={product} 
+                        setNewProduct={setProduct}
+                        url={'/my-products/edit/' + product.id}
+                        setProductOnResult={() => {}}
                     />
                 </Stack>
             </UnloggedLayout>
         </LoggedRoute>
-    )
+    );
 }
 
-export default NewProduct;
+export default EditProduct;

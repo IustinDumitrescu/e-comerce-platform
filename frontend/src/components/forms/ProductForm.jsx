@@ -3,23 +3,17 @@ import FormTemplate from "./FormTemplate";
 import { Box, Button, TextField, MenuItem, InputAdornment, Typography} from "@mui/material";
 import useCategories from "../../hooks/useCategories";
 import ImageUploadField from "../inputs/ImageUploadField";
-import useNewProduct from "../../hooks/useNewProduct";
-import { FormControlLabel, Switch } from "@mui/material";
-
-const NEW_PRODUCT = {
-    title: '',
-    description: '',
-    price: 0,
-    categoryId: '',
-    image: null, 
-    active: true
-};
+import useProduct from "../../hooks/useProduct";
+import SwitchField from "../inputs/SwitchField";
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function NewProductForm() {
-    const [newProduct, setNewProduct] = useState(NEW_PRODUCT); 
-
+export default function ProductForm({
+    newProduct, 
+    setNewProduct, 
+    url, 
+    setProductOnResult
+}) {
     const [flash, setFlash] = useState({
         type: 'error',
         message: ''
@@ -27,7 +21,7 @@ export default function NewProductForm() {
 
     const {data: categories, isLoading} = useCategories();
 
-    const {createNewProduct, loading} = useNewProduct();
+    const {doProduct, loading} = useProduct();
 
     const validateProduct = () => {
         if (newProduct.title.length < 3) {
@@ -42,9 +36,9 @@ export default function NewProductForm() {
             return {type: 'error', message: 'Price must be bigger than 0'};
         }
 
-        if (!newProduct.image || newProduct.image.size > 2000000 || !IMAGE_TYPES.includes(newProduct.image.type)) {
-            return {type: 'error', message: 'Image must have at most 2MB and must be jpeg, png or webp'}
-        }
+        // if (!newProduct.image || newProduct.image.size > 2000000 || !IMAGE_TYPES.includes(newProduct.image.type)) {
+        //     return {type: 'error', message: 'Image must have at most 2MB and must be jpeg, png or webp'}
+        // }
 
         return {type: 'success', message: ''}
     };
@@ -67,12 +61,12 @@ export default function NewProductForm() {
             return;
         }
         
-        const result = await createNewProduct(newProduct);
+        const result = await doProduct(url, newProduct);
 
         setFlash(result);
 
         if (result.type !== 'error') {
-            setNewProduct(NEW_PRODUCT);
+            setProductOnResult(result);
         }
         
         return;
@@ -81,7 +75,7 @@ export default function NewProductForm() {
     return (
         <FormTemplate flash={flash} setFlash={setFlash}>
              <Typography component={'h5'} fontWeight={600}>
-                    Create New Product
+                    {url.includes('edit') ? 'Edit Product' : 'Create New Product'}
              </Typography>
 
             <Box component="form" onSubmit={handleSubmit}>
@@ -140,7 +134,7 @@ export default function NewProductForm() {
                     variant="outlined"
                     InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        inputProps: { min: 0, step: 0.01 } // allows decimals
+                        inputProps: { min: 0, step: 0.01 } 
                     }}
                     required
                 />
@@ -151,13 +145,9 @@ export default function NewProductForm() {
                     }}
                 />
 
-                <FormControlLabel
-                    control={
-                        <Switch
-                        checked={newProduct.active}
-                        onChange={(e) => setNewProduct({...newProduct, active: e.target.checked})}
-                        />
-                    }
+                <SwitchField
+                    checked={newProduct.active}
+                    setChecked={(e) => setNewProduct({...newProduct, active: e.target.checked})}
                     label={newProduct.active ? "Active" : "Inactive"}
                 />
 
@@ -169,7 +159,7 @@ export default function NewProductForm() {
                     sx={{ mt: 2, py: 1.2, textTransform: "none", fontWeight: 600 }}
                     loading={loading}
                 >
-                    Create
+                    {url.includes('edit') ? 'Edit' : 'Create'}
                 </Button>
             </Box>
         </FormTemplate>
