@@ -37,9 +37,14 @@ class ProductsController extends AbstractController
     }
 
     #[Route(path: '/api/products', name: 'products_listing')]
-    public function getProducts(ProductRepository $productRepository)
+    public function getProducts(
+        ProductService  $productService,
+        Request $request
+    )
     {
-        $products = $productRepository->findBy([], ["createdAt" => "DESC"]);
+        $products = $productService->findByParams(
+            $request->query->all()
+        );
 
         return new JsonResponse($this->normalizeProducts($products));
     }

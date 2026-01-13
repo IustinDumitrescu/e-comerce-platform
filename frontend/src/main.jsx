@@ -2,6 +2,7 @@
   import { createRoot } from 'react-dom/client'
   import App from './App.jsx'
   import UserProvider from './contexts/AuthContext.jsx'
+  import CartProvider from './contexts/CartContext.jsx'
   import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
   const queryClient = new QueryClient();
@@ -10,7 +11,9 @@
     <StrictMode>
          <QueryClientProvider client={queryClient}>
           <UserProvider>
-              <App />
+            <CartProvider>
+               <App />
+            </CartProvider>
           </UserProvider>
         </QueryClientProvider>
     </StrictMode>,

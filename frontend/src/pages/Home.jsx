@@ -2,14 +2,20 @@ import UnloggedLayout from '../layouts/UnloggedLayout';
 import Header from '../components/Header';
 import { Grid } from '@mui/material';
 import { Stack, Typography, Box, Button } from '@mui/material';
-
 import { useEffect, useState } from 'react';
 import useFindAllProducts from '../hooks/useFindAllProducts';
 import ProductCard from '../components/cards/ProductCard';
+import useUser from '../hooks/useUser';
+import { useNavigate } from 'react-router-dom';
+import { paths } from '../config/routes';
+import useCart from '../hooks/useCart';
 
 function Home() {
   const [products, setProducts] = useState([]);
   const { getProducts, loading } = useFindAllProducts();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const { addCartItem } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,7 +43,16 @@ function Home() {
         <Typography variant="h6" color="text.secondary" mb={4}>
           Explore quality products made just for you
         </Typography>
-        <Button variant="contained" size="large" href="/products">
+        <Button 
+          variant="contained" 
+          size="large" 
+          onClick={() => {
+            if (!user) {
+              navigate(paths.login)
+              return;
+            }
+          }}
+        >
           Browse Products
         </Button>
       </Box>
@@ -55,7 +70,9 @@ function Home() {
               >
                 <ProductCard
                   product={product}
-                  onAddToCart={() => {}}
+                  onAddToCart={() => {
+                    addCartItem(product);
+                  }}
                   onView={() => {}}
                 />
               </Grid>

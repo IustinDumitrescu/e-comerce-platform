@@ -6,6 +6,7 @@ import Register from "../pages/Register";
 import NewProduct from "../pages/NewProduct";
 import ViewProduct from "../pages/ViewProduct";
 import EditProduct from "../pages/EditProduct";
+import Cart from "../pages/Cart";
 
 export const LOGGED_AND_UNLOGGED = 'none';
 
@@ -21,7 +22,8 @@ export const routes = [
     { name: 'myProducts', path: '/my-products', component: MyProducts, only: LOGGED},
     { name: 'newProduct', path: '/my-products/new', component: NewProduct, only: LOGGED},
     { name: 'viewProduct', path: '/my-products/:id', component: ViewProduct, only: LOGGED},
-    { name: 'editProduct', path: '/my-products/:id/edit', component: EditProduct, only: LOGGED}
+    { name: 'editProduct', path: '/my-products/:id/edit', component: EditProduct, only: LOGGED},
+    { name: 'cart', path: '/cart', component: Cart, only: LOGGED_AND_UNLOGGED}
 ];
 
 export const paths = (() => {

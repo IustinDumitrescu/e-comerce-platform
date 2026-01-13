@@ -18,6 +18,10 @@ class UserController extends AbstractController
     {
         $user = $this->getUser();
 
+        if (!$user) {
+            return new JsonResponse([]);
+        }
+
         return new JsonResponse([
             "id" => $user->getId(),
             "email" => $user->getEmail(),

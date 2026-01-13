@@ -26,6 +26,21 @@ class ProductService
     {
     }
 
+    public function findByParams(array $parameters): array 
+    {
+        $validate = [];
+
+        $limit = !empty($parameters["limit"]) && filter_var($parameters["limit"], FILTER_VALIDATE_INT)
+            ? (int) $parameters["limit"]
+            : 20;
+
+        if (!empty($parameters["active"]) && in_array($parameters["active"], ['true', 'false'])) {
+            $validate["active"] = true;
+        }    
+
+        return $this->productRepository->findBy($validate, ["createdAt" => "DESC"], $limit);
+    }
+
     public function createProduct(
         User $user, 
         array $productItems, 

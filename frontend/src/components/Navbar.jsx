@@ -11,21 +11,24 @@ import {
   Divider,
   Drawer,
   List,
-  ListItem,
   ListItemText,
   Stack,
   ListItemIcon,
-  ListItemButton
+  ListItemButton,
+  Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import Badge from '@mui/material/Badge';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { Link, useLocation } from 'react-router-dom';
 import { paths } from '../config/routes';
 import { useState } from 'react';
+import useCart from '../hooks/useCart';
 
 const drawerWidth = 240;
 
@@ -33,6 +36,7 @@ export default function Navbar({ user, logout }) {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { cartItems } = useCart();
 
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -52,6 +56,18 @@ export default function Navbar({ user, logout }) {
     { text: 'Add Product', path: paths.newProduct, icon: <AddBoxIcon color='primary'/> },
     { text: 'My Orders', path: paths.myOrders, icon: <ReceiptLongIcon color='primary'/> },
   ];
+
+  const cartQuantity = (() => {
+    let total = 0;
+
+    if (cartItems.length < 1) return total;
+
+    for (const item of cartItems) {
+      total += item.quantity;
+    }
+
+    return total;
+  })();
 
   return (
     <>
@@ -93,7 +109,23 @@ export default function Navbar({ user, logout }) {
           </Box>
 
           {/* Right side: avatar or login/register */}
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+               
+             <Tooltip title="View cart">
+              <IconButton
+                component={Link}
+                to={paths.cart}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.15)",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.25)" }
+                }}
+              >
+                <Badge badgeContent={cartQuantity} color="error">
+                  <ShoppingCartIcon htmlColor="white" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+
             {user ? (
               <>
                 <IconButton

@@ -31,8 +31,8 @@ export default function UserProvider({children}) {
 
             try {
                 const result = await axiosConfig.get('/me');
-
-                setUser(result.data);
+            
+                setUser(result.data.id ? result.data : null);
             } catch {
                 setUser(null);
             } finally {
