@@ -5,6 +5,7 @@ import useCategories from "../../hooks/useCategories";
 import ImageUploadField from "../inputs/ImageUploadField";
 import useProduct from "../../hooks/useProduct";
 import SwitchField from "../inputs/SwitchField";
+import CategorySelect from "../inputs/CategorySelect";
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -100,30 +101,14 @@ export default function ProductForm({
                     required
                 />
 
-                <TextField 
-                    select
-                    label="Category"
-                    name="categoryId"
+                <CategorySelect
+                    categories={categories}
                     value={newProduct.categoryId}
-                    onChange={handleChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                    required
-                    
-                >
-                    {isLoading ? (
-                        <MenuItem disabled>Loading...</MenuItem>
-                        ) : (
-                        categories.map((category) => (
-                            <MenuItem key={category.id} value={category.id}>
-                                {category.name}
-                            </MenuItem>
-                        ))
-                    )}
-                </TextField>
+                    loading={isLoading}
+                    handleChange={handleChange}
+                />
 
-                 <TextField
+                <TextField
                     label="Price"
                     type="number"
                     value={newProduct.price}

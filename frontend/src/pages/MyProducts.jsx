@@ -53,7 +53,7 @@ function MyProducts() {
                     <IconButton
                         size="small"
                         color="primary"
-                        onClick={() => navigate(paths.viewProduct.replace(':id', params.row.id))}
+                        onClick={() => navigate(paths.myProduct.replace(':id', params.row.id))}
                     >
                         <VisibilityIcon fontSize="small" />
                     </IconButton>

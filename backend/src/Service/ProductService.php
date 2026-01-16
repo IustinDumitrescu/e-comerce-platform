@@ -28,17 +28,22 @@ class ProductService
 
     public function findByParams(array $parameters): array 
     {
-        $validate = [];
+        $page = !empty($parameters["page"]) && filter_var($parameters["page"], FILTER_VALIDATE_INT) 
+            ? (int) $parameters["page"] 
+            : 1; 
 
-        $limit = !empty($parameters["limit"]) && filter_var($parameters["limit"], FILTER_VALIDATE_INT)
-            ? (int) $parameters["limit"]
-            : 20;
+        $validate = $this->getProductsValidatedParams($parameters);
 
-        if (!empty($parameters["active"]) && in_array($parameters["active"], ['true', 'false'])) {
-            $validate["active"] = true;
-        }    
-
-        return $this->productRepository->findBy($validate, ["createdAt" => "DESC"], $limit);
+        return [
+            "products" => $this->productRepository->findByParameters(
+                $validate, 
+                $validate["orderBy"], 
+                $validate["order"],
+                $page, 
+                $validate["limit"]
+            ),
+            "totalProducts" => $this->productRepository->countByParamaters($validate)
+        ];
     }
 
     public function createProduct(
@@ -146,5 +151,45 @@ class ProductService
     public function invalidateCache(): void
     {
         $this->cache->delete('category_list'); // clear cache
+    }
+
+    private function getProductsValidatedParams(array $parameters): array 
+    {
+        $validate = [
+            "orderBy" => "createdAt",
+            "order" => "DESC",
+            "limit" => !empty($parameters["limit"]) && filter_var($parameters["limit"], FILTER_VALIDATE_INT)
+                ? (int) $parameters["limit"]
+                : 20
+        ];
+
+
+        if (!empty($parameters["active"]) && in_array($parameters["active"], ['true', 'false'])) {
+            $validate["active"] = true;
+        }    
+
+        if (!empty($parameters["categoryId"]) && ($category = $this->categoryRepository->find($parameters["categoryId"]))) {
+            $validate["productCategory"] = $category;
+    
+        } 
+    
+        if (!empty($parameters["order"])) {
+             $order = match ($parameters["order"]) {
+                'name_asc' => ['title', 'ASC'],
+                'name_desc' => ['title', 'DESC'],
+                'price_asc' => ['price', 'ASC'],
+                'price_desc' => ['price', 'DESC'],
+                 default => ['createdAt', 'DESC']
+            }; 
+
+            $validate["orderBy"] = $order[0];
+            $validate["order"] = $order[1];
+        }
+
+        if (!empty($parameters["search"])) {
+            $validate["search"] = trim(strtolower(filter_var($parameters["search"], FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
+        }
+
+        return $validate;
     }
 }

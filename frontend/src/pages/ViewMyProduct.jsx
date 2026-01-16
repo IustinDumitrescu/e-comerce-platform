@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { ArrowBack } from '@mui/icons-material';
 
-function ViewProduct() {
+function ViewMyProduct() {
     const { id } = useParams();
     const {getProduct, loading} = useViewProduct();
 
@@ -152,4 +152,4 @@ function ViewProduct() {
     );
 }
 
-export default ViewProduct;
+export default ViewMyProduct;

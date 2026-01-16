@@ -6,6 +6,7 @@ use App\Entity\Product;
 use App\Entity\ProductCategory;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -25,6 +26,35 @@ class ProductRepository extends ServiceEntityRepository
         $em->persist($product);
 
         $em->flush();
+    }
+
+    public function countByParamaters(array $parameters): int
+    {
+         $qb = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)');
+
+        $this->addProductsQueryParameters($qb, $parameters);
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function findByParameters(
+        array $parameters, 
+        string $orderBy, 
+        string $order, 
+        int $page = 1, 
+        int $limit = 20    
+    ): array 
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        $this->addProductsQueryParameters($qb, $parameters);
+
+        return $qb
+            ->orderBy('p.' . $orderBy, $order)
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()->getResult();
     }
 
     public function exists(string $title, ProductCategory $category, User $owner) 
@@ -59,5 +89,22 @@ class ProductRepository extends ServiceEntityRepository
             ->setFirstResult($limit * ($page - 1))
             ->orderBy('p.'. $orderBy, $order)
             ->getQuery()->getResult();
+    }
+
+    private function addProductsQueryParameters(QueryBuilder $qb, array $parameters): void
+    {
+        if (!empty($parameters["search"])) {
+            $search = $parameters['search'];
+
+            $qb->andWhere("lower(p.title) like CONCAT('%', '$search', '%')");
+        }
+
+        foreach ($parameters as $key => $parameter) {
+            if (!in_array($key, ['limit', 'order', 'orderBy', 'search'])) {
+                $qb
+                    ->andWhere("p.$key = :$key")
+                    ->setParameter($key, $parameter);
+            }
+        }
     }
 }

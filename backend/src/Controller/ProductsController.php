@@ -46,7 +46,9 @@ class ProductsController extends AbstractController
             $request->query->all()
         );
 
-        return new JsonResponse($this->normalizeProducts($products));
+        $products["products"] = $this->normalizeProducts($products["products"]);
+
+        return new JsonResponse($products);
     }
 
     #[Route(path: '/api/products/product-{id}', name: 'view_product', requirements:["id" => "\d+"])]

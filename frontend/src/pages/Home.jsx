@@ -10,7 +10,10 @@ import { paths } from '../config/routes';
 import useCart from '../hooks/useCart';
 
 function Home() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState({
+    products: [],
+    totalProducts: 0
+  });
   const { getProducts, loading } = useFindAllProducts();
   const navigate = useNavigate();
   const { addCartItem } = useCart();
@@ -58,7 +61,7 @@ function Home() {
         </Typography>
 
         <Grid container spacing={3}>
-            {products.map((product) => (
+            {products.products.map((product) => (
               <Grid
                 key={product.id}
                 size={{ xs: 12, sm: 6, md: 4}}
@@ -68,7 +71,9 @@ function Home() {
                   onAddToCart={() => {
                     addCartItem(product);
                   }}
-                  onView={() => {}}
+                    onView={() => {
+                        navigate(paths.product.replace(':id', product.id));
+                    }}
                 />
               </Grid>
             ))}
