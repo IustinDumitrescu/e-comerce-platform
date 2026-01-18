@@ -91,6 +91,15 @@ class ProductRepository extends ServiceEntityRepository
             ->getQuery()->getResult();
     }
 
+    public function findByIdList(array $productIds): array 
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.id in (:ids)')
+            ->setParameter('ids', $productIds)
+            ->getQuery()
+            ->getResult();   
+    }
+
     private function addProductsQueryParameters(QueryBuilder $qb, array $parameters): void
     {
         if (!empty($parameters["search"])) {

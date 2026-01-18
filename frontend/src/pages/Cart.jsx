@@ -16,16 +16,43 @@ import { Add, Remove, Delete } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { paths } from "../config/routes";
 import useCart from "../hooks/useCart";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import CheckoutConfirmDialog from "../components/modal/CheckoutConfirmDialog";
+import usePlaceOrder from "../hooks/usePlaceOrder";
+import Flash from "../components/Flash";
+import useUser from "../hooks/useUser";
 
 function Cart() {
   const navigate = useNavigate();
 
-  const { cartItems , addCartItem, removeCartItem, deleteCartItem} = useCart();
+  const { cartItems , addCartItem, removeCartItem, deleteCartItem, setCartItems} = useCart();
+
+  const [openCheckOut, setOpenCheckout] = useState(false);
+  const [flash, setFlash]  = useState({
+        type: 'error',
+        message: ''
+  });
+
+  const {placeOrder, loading} = usePlaceOrder();
+
+  const { user } = useUser();
 
   const subTotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cartItems]);
+
+
+  const doOrder = async () => {
+    const result = await placeOrder(cartItems);
+
+    setOpenCheckout(false);
+
+    setFlash(result);
+
+    if (result.type === 'success') {
+      setCartItems([]);
+    }
+  };
 
   if (!cartItems.length) {
     return (
@@ -50,6 +77,21 @@ function Cart() {
   return (
     <UnloggedLayout>
       <Header title="Cart" />
+
+      <Flash
+          open={flash.message.length > 0}
+          message={flash.message}
+          severity={flash.type}
+          onClose={() => setFlash({...flash, message: ''})}
+      />
+
+      <CheckoutConfirmDialog
+        open={openCheckOut}
+        onClose={() => setOpenCheckout(false)}
+        onConfirm={doOrder}
+        loading={loading}
+        totalPrice={subTotal}
+      />
 
       <Box maxWidth="lg" mx="auto" px={2} py={4}>
         <Typography variant="h4" fontWeight={600} mb={4}>
@@ -155,6 +197,13 @@ function Cart() {
                   size="large"
                   fullWidth
                   sx={{ borderRadius: 2, py: 1.2 }}
+                  onClick={() => {
+                    if (!user) {
+                      navigate(paths.login);
+                      return;
+                    }
+                    setOpenCheckout(true)
+                  }}
                 >
                   Checkout
                 </Button>

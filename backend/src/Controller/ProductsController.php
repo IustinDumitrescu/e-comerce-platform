@@ -36,6 +36,34 @@ class ProductsController extends AbstractController
         return $response;
     }
 
+    #[Route(path: '/api/create-order', name: 'create_product_order', methods:['POST'])]
+    public function createOrder(
+        ProductService $productService,
+        Request $request
+    ) 
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You must be logged in to place an order'
+            ], 401); // 401 Unauthorized
+        }
+
+        $items = json_decode($request->getContent(), true);
+
+        if (empty($items["products"])) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You have no product'
+            ], 401); // 401 Unauthorized
+        }
+
+        return new JsonResponse($productService->handleOrder($user, $items["products"]));
+    }
+
+
     #[Route(path: '/api/products', name: 'products_listing')]
     public function getProducts(
         ProductService  $productService,

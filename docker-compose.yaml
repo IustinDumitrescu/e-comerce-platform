@@ -15,12 +15,14 @@ services:
     container_name: backend
     depends_on:
       - postgres
+      - rabbitmq
     volumes:
       - ./backend:/app  
     expose:
       - "9000"
     environment:
       DATABASE_URL: "postgresql://myuser:mypassword@postgres:5432/mydb?serverVersion=18.1&charset=utf8"
+      MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f
     command: sh -c "composer install && php-fpm" 
 
   nginx:
@@ -43,4 +45,15 @@ services:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
     ports:
-      - "5432:5432"    
+      - "5432:5432" 
+
+  rabbitmq: 
+    image: rabbitmq:4.2.2-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      

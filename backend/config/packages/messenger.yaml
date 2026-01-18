@@ -1,0 +1,32 @@
+framework:
+    messenger:
+        default_bus: messenger.bus.default
+        buses:
+            messenger.bus.default: ~
+
+        transports:
+            # RabbitMQ transport
+            order_notification:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: order_notification
+                        type: direct
+                    queue:
+                        name: order_notification
+                        durable: true
+                    auto_setup: true
+
+
+        routing:
+            'App\Message\OrderNotification': order_notification 
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async
+
+# when@test:
+#    framework:
+#        messenger:
+#            transports:
+#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
+#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
+#                async: 'in-memory://'

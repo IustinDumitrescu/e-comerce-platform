@@ -2,12 +2,20 @@
 
 namespace App\Service;
 
+use App\Entity\Order;
+use App\Entity\OrderItem;
 use App\Entity\Product;
+use App\Entity\SellerOrder;
 use App\Entity\User;
+use App\Enum\OrderStatus;
+use App\Enum\SellerOrderStatus;
+use App\Message\OrderNotification;
+use App\Repository\OrderRepository;
 use App\Repository\ProductCategoryRepository;
 use App\Repository\ProductRepository;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -21,9 +29,112 @@ class ProductService
         private readonly ProductCategoryRepository $categoryRepository,
         private readonly ValidatorInterface $validator,
         private readonly ParameterBagInterface $parameterBag,
-        private readonly ProductRepository $productRepository
+        private readonly ProductRepository $productRepository,
+        private readonly OrderRepository $orderRepository,
+        private readonly MessageBusInterface $meesageBus
     )
     {
+    }
+
+    public static function array_map_custom(
+        callable $function, 
+        array $items, 
+        string $keyToBeMapped, 
+        bool $object = true
+    ): array
+    {
+        if (empty($items)) {
+            return [];
+        }
+
+        $newItems = [];
+
+        foreach ($items as $item) {
+            if ($object) {
+                $get = 'get' . u($keyToBeMapped)->title()->toString();
+
+                $newItems[$item->$get()] = $function($item);
+            } else {
+                $newItems[$item[$keyToBeMapped]] = $function($item);
+            }
+        }
+
+        return $newItems;
+    }
+
+    public function handleOrder(User $buyer, array $items): array 
+    {
+        $countI = count($items);
+
+        if ($countI > 10) {
+            return ["type" => "error", "message" => "You have too many products, maximum 10"];
+        }
+
+        $em = $this->orderRepository->getEntityManager();
+
+        $em->beginTransaction();
+
+        try {
+            $products = self::array_map_custom(
+                static fn (Product $p) => $p,
+                $this->productRepository->findByIdList(
+                    array_map(static fn(array $item) => $item["id"], $items)
+                ),
+                'id'
+            );       
+
+            if ($countI !== count($products)) {
+                throw new \RuntimeException('Error on getting the products');
+            }
+
+            [$sellerContainer, $total] = $this->createOrderData($products, $items);
+
+            $em->persist(
+                $order = (new Order())
+                    ->setBuyer($buyer)
+                    ->setPrice($total)
+                    ->setStatus(OrderStatus::PENDING)
+                    ->setCreatedAt((new \DateTime()))
+                    ->setUpdatedAt(null)
+            );
+
+            foreach ($sellerContainer as $container) {
+                $sellerOrder = (new SellerOrder())
+                    ->setOrder($order)
+                    ->setStatus(SellerOrderStatus::NEW)
+                    ->setSeller($container["seller"])
+                    ->setSubtotal($container["total"])
+                    ->setCreatedAt((new \DateTime()))
+                    ->setUpdatedAt(null);
+
+                $em->persist($sellerOrder);    
+
+                foreach ($container['items'] as $item) {
+                    $em->persist(
+                        (new OrderItem)
+                            ->setSellerOrder($sellerOrder)
+                            ->setProduct($item["product"])
+                            ->setQuantity($item["quantity"])
+                            ->setPrice($item["product"]->getPrice() * $item["quantity"])
+                            ->setCreatedAt((NEW \DateTime()))
+                            ->setUpdatedAt(null)
+                    );
+                }
+            }
+            
+            $em->flush();
+
+            $em->commit();
+
+            $this->meesageBus->dispatch((new OrderNotification())->setOrderId($order->getId()));
+
+            return ["type" => "success", "message" => "Your order has been created"];
+
+        } catch (\Throwable $e) {
+            $em->rollback();
+
+            return ["type" => "error", "message" => $e->getMessage()];
+        }
     }
 
     public function findByParams(array $parameters): array 
@@ -119,6 +230,7 @@ class ProductService
 
     public function getCategories(): array
     {
+        
         return $this->cache->get('category_list', function (ItemInterface $item) {
             $item->expiresAfter(14400);
             $categoryArr = $this->categoryRepository->findAll();
@@ -151,6 +263,52 @@ class ProductService
     public function invalidateCache(): void
     {
         $this->cache->delete('category_list'); // clear cache
+    }
+
+    private function createOrderData(array $products, array $items): array 
+    {
+        $total = $quantity = 0;
+
+        $sellerContainer = [];
+
+        foreach ($items as $item) {
+            if ($item["quantity"] < 1) {
+                throw new \RuntimeException("Quantity can't be lower than 1");
+            }
+
+            $product = $products[$item["id"]];
+
+            $pricePerProd = ($product->getPrice() * $item["quantity"]);
+
+            $quantity += $item["quantity"];
+
+            $total += $pricePerProd;
+
+            $seller = $product->getOwner();
+
+            if (!isset($sellerContainer[$seller->getId()])) {
+                $sellerContainer[$seller->getId()] = [
+                    "items" => [
+                        $product->getId() => [
+                            "product" => $product,
+                            "quantity" => $item["quantity"]
+                        ]
+                    ],
+                    "total" => $pricePerProd,
+                    "quantity" => $item["quantity"],
+                    "seller" => $seller
+                ];
+            } else {
+                $sellerContainer[$seller->getId()]["items"][$product->getId()] = [
+                    "product" => $product,
+                    "quantity" => $item["quantity"]
+                ];
+                $sellerContainer[$seller->getId()]["total"] += $pricePerProd;
+                $sellerContainer[$seller->getId()]["quantity"] += $item["quantity"]; 
+            }
+        }
+
+        return [$sellerContainer, $total];
     }
 
     private function getProductsValidatedParams(array $parameters): array 
