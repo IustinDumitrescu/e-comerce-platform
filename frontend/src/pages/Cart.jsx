@@ -47,11 +47,11 @@ function Cart() {
 
     setOpenCheckout(false);
 
-    setFlash(result);
-
     if (result.type === 'success') {
       setCartItems([]);
     }
+
+    setFlash(result);
   };
 
   if (!cartItems.length) {

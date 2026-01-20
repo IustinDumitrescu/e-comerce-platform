@@ -15,13 +15,13 @@ import {
   Stack,
   ListItemIcon,
   ListItemButton,
-  Tooltip
+  Tooltip,
+  Badge
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import Badge from '@mui/material/Badge';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -29,6 +29,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { paths } from '../config/routes';
 import { useState } from 'react';
 import useCart from '../hooks/useCart';
+import useNotifications from '../hooks/useNotifications';
+import useMercure from '../hooks/useMercure';
 
 const drawerWidth = 240;
 
@@ -37,6 +39,7 @@ export default function Navbar({ user, logout }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { cartItems } = useCart();
+  const { notifications, addNotification} = useNotifications();
 
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -69,6 +72,14 @@ export default function Navbar({ user, logout }) {
     return total;
   })();
 
+  useMercure(
+    user ? [`/user/${user.id}/notifications`]: [], 
+    (result) => {
+      addNotification(result)
+      alert(result.message);
+    }
+  );
+
   return (
     <>
       <AppBar
@@ -89,7 +100,13 @@ export default function Navbar({ user, logout }) {
                 onClick={toggleDrawer}
                 sx={{ mr: 1 }}
               >
-                <MenuIcon />
+                <Badge
+                  badgeContent={notifications.length}
+                  color="error"
+                  invisible={notifications.length === 0}
+                >
+                  <MenuIcon />
+                </Badge>
               </IconButton>
             )}
 

@@ -37,7 +37,7 @@ function Home() {
         }
       />
        
-      <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
+      <Box sx={{ textAlign: 'center', py: 8, px: 5 }}>
         <Typography variant="h3" fontWeight={700} gutterBottom>
           Welcome to Our Store
         </Typography>
@@ -55,8 +55,8 @@ function Home() {
         </Button>
       </Box>
 
-       <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2, py: 6 }}>
-        <Typography variant="h4" fontWeight={600} mb={3}>
+       <Box sx={{ px: 5, py: 8 }}>
+        <Typography variant="h4" fontWeight={600} mb={3} textAlign={'center'}>
           Featured Products
         </Typography>
 

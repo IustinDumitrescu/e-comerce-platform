@@ -13,6 +13,7 @@ use App\Message\OrderNotification;
 use App\Repository\OrderRepository;
 use App\Repository\ProductCategoryRepository;
 use App\Repository\ProductRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -31,7 +32,8 @@ class ProductService
         private readonly ParameterBagInterface $parameterBag,
         private readonly ProductRepository $productRepository,
         private readonly OrderRepository $orderRepository,
-        private readonly MessageBusInterface $meesageBus
+        private readonly MessageBusInterface $meesageBus,
+        private readonly LoggerInterface $logger
     )
     {
     }
@@ -105,7 +107,7 @@ class ProductService
                     ->setSeller($container["seller"])
                     ->setSubtotal($container["total"])
                     ->setCreatedAt((new \DateTime()))
-                    ->setUpdatedAt(null);
+                    ->setUpdatedAt((new \DateTime()));
 
                 $em->persist($sellerOrder);    
 
@@ -126,15 +128,17 @@ class ProductService
 
             $em->commit();
 
-            $this->meesageBus->dispatch((new OrderNotification())->setOrderId($order->getId()));
-
-            return ["type" => "success", "message" => "Your order has been created"];
-
         } catch (\Throwable $e) {
-            $em->rollback();
+            if ($em->getConnection()->isTransactionActive()) {
+                $em->rollback();
+            }
 
             return ["type" => "error", "message" => $e->getMessage()];
         }
+
+        $this->meesageBus->dispatch((new OrderNotification())->setOrderId($order->getId()));
+
+        return ["type" => "success", "message" => "Your order has been created"];
     }
 
     public function findByParams(array $parameters): array 

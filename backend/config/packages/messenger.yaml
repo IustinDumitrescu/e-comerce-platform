@@ -12,11 +12,7 @@ framework:
                     exchange:
                         name: order_notification
                         type: direct
-                    queue:
-                        name: order_notification
-                        durable: true
                     auto_setup: true
-
 
         routing:
             'App\Message\OrderNotification': order_notification 
