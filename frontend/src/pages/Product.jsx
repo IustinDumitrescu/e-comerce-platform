@@ -127,13 +127,13 @@ function Product() {
                                 Add to Cart
                             </Button>
 
-                            <Button
+                            {/* <Button
                                 variant="outlined"
                                 size="large"
                                 fullWidth
                             >
                                 Buy Now
-                            </Button>
+                            </Button> */}
                         </Stack>
 
                         <Typography

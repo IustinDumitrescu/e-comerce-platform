@@ -70,8 +70,16 @@ class ProductRepository extends ServiceEntityRepository
             ->getQuery()->getOneOrNullResult();
     }
 
-    public function getMyProducts(array $parameters, User $owner, int $page, int $limit): array 
+    public function getMyProducts(array $parameters, User $owner): array 
     {
+        $page = !empty($parameters["page"]) && filter_var($parameters["page"], FILTER_VALIDATE_INT)
+            ? (int) $parameters["page"]
+            : 1;
+
+        $limit = !empty($parameters["limit"]) && in_array($parameters["limit"], [10 , 20, 30])   
+            ? (int) $parameters["limit"]
+            : 10;
+
         $orderBy = !empty($parameters["orderBy"]) 
             ? filter_var($parameters["orderBy"], FILTER_SANITIZE_FULL_SPECIAL_CHARS)
             : 'createdAt';
@@ -79,7 +87,6 @@ class ProductRepository extends ServiceEntityRepository
         $order = !empty($parameters["order"]) && in_array(strtoupper($parameters["order"]), ["ASC", "DESC"]) 
             ? $parameters["order"]
             : 'DESC';  
-
 
         return $this->createQueryBuilder('p')
             ->select('p')

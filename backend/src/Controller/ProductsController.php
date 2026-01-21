@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Repository\ProductRepository;
 use App\Service\ProductService;
+use App\Enum\OrderType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,6 +37,29 @@ class ProductsController extends AbstractController
         return $response;
     }
 
+    #[Route(path: '/api/orders-{type}', name: 'user_orders', methods: ['GET'])]
+    public function orders(
+        ProductService $productService,
+        Request $request,
+        string $type 
+    )
+    {
+        $user = $this->getUser();
+
+        $orderType = OrderType::tryFrom($type);
+
+        if (!$user || !$orderType) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You must be logged in to place an order'
+            ], 401); // 401 Unauthorized
+        }
+
+        $parameters = $request->query->all();
+
+        return new JsonResponse($productService->getMyOrders($user, $orderType, $parameters));
+    }
+
     #[Route(path: '/api/create-order', name: 'create_product_order', methods:['POST'])]
     public function createOrder(
         ProductService $productService,
@@ -62,7 +86,6 @@ class ProductsController extends AbstractController
 
         return new JsonResponse($productService->handleOrder($user, $items["products"]));
     }
-
 
     #[Route(path: '/api/products', name: 'products_listing')]
     public function getProducts(
@@ -98,7 +121,10 @@ class ProductsController extends AbstractController
     }
 
     #[Route(path: '/api/my-products', name: 'my_products')]
-    public function myProducts(Request $request, ProductRepository $productRepository) 
+    public function myProducts(
+        Request $request, 
+        ProductRepository $productRepository
+    ) 
     {
         $user = $this->getUser();
 
@@ -111,15 +137,7 @@ class ProductsController extends AbstractController
 
         $params = $request->query->all();
 
-        $page = !empty($params["page"]) && filter_var($params["page"], FILTER_VALIDATE_INT)
-            ? (int) $params["page"]
-            : 1;
-
-        $pageSize = !empty($params["limit"]) && in_array($params["limit"], [10 , 20, 30])   
-            ? (int) $params["limit"]
-            : 10;
-
-        $products = $productRepository->getMyProducts($params, $user, $page, $pageSize);    
+        $products = $productRepository->getMyProducts($params, $user);    
 
         return new JsonResponse($this->normalizeProducts($products));
     }

@@ -13,7 +13,8 @@ use App\Message\OrderNotification;
 use App\Repository\OrderRepository;
 use App\Repository\ProductCategoryRepository;
 use App\Repository\ProductRepository;
-use Psr\Log\LoggerInterface;
+use App\Repository\SellerOrderRepository;
+use App\Enum\OrderType;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -33,7 +34,7 @@ class ProductService
         private readonly ProductRepository $productRepository,
         private readonly OrderRepository $orderRepository,
         private readonly MessageBusInterface $meesageBus,
-        private readonly LoggerInterface $logger
+        private readonly SellerOrderRepository $sellerOrderRepository
     )
     {
     }
@@ -62,6 +63,36 @@ class ProductService
         }
 
         return $newItems;
+    }
+
+    public function getMyOrders(User $user, OrderType $type, array $parameters): array
+    {
+       
+        $parameters["page"] = !empty($parameters["page"]) && filter_var($parameters["page"], FILTER_VALIDATE_INT)
+            ? (int) $parameters["page"]
+            : 1;
+
+        $parameters["limit"] = !empty($parameters["limit"]) && in_array($parameters["limit"], [10 , 20, 30])   
+            ? (int) $parameters["limit"]
+            : 10;
+
+        $parameters["orderBy"] = !empty($parameters["orderBy"]) 
+            ? filter_var($parameters["orderBy"], FILTER_SANITIZE_FULL_SPECIAL_CHARS)
+            : 'createdAt';
+
+        $parameters["order"] = !empty($parameters["order"]) && in_array(strtoupper($parameters["order"]), ["ASC", "DESC"]) 
+            ? $parameters["order"]
+            : 'DESC';  
+
+        if ($type->value === OrderType::BOUGHT->value) {
+           return $this->normalizeOrders(
+                $this->orderRepository->getMyOrders($user, $parameters)
+           );
+        }
+
+        return $this->normalizeOrders(
+            $this->sellerOrderRepository->getMyOrders($user, $parameters)
+        );
     }
 
     public function handleOrder(User $buyer, array $items): array 
@@ -353,5 +384,20 @@ class ProductService
         }
 
         return $validate;
+    }
+
+    private function normalizeOrders(array $orders): array
+    {
+        if (empty($orders)) {
+            return [];
+        }
+
+        return array_map(static fn (Order|SellerOrder $order) => [
+            "id" => $order->getId(),
+            "price" => is_a($order, Order::class) ? $order->getPrice(): $order->getSubtotal(),
+            "status" => $order->getStatus()->value,
+            "createdAt" => $order->getCreatedAt()->format('d.m.Y'),
+            "updateAt" => $order->getUpdatedAt()?->format('d.m.Y')
+        ], $orders);
     }
 }

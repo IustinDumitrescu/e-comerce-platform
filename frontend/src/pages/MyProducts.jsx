@@ -21,12 +21,10 @@ function MyProducts() {
 
     const [sortModel, setSortModel] = useState([]);
 
-    const [filterModel, setFilterModel] = useState({ items: [] });
-
     const { data, isLoading } = useMyProducts({
         paginationModel, 
         sortModel, 
-        filterModel 
+        filterModel: {items: []}
     });
 
      const columns = [
@@ -73,11 +71,11 @@ function MyProducts() {
     return (
         <LoggedRoute>
             <UnloggedLayout>
-                    <Header
-                        title={'My Products | My Portfolio App'}
-                        metaName={'description'}
-                        metaContent={'See your products and modify them'}
-                    />
+                <Header
+                    title={'My Products | My Portfolio App'}
+                    metaName={'description'}
+                    metaContent={'See your products and modify them'}
+                />
 
                 <Box sx={{ p: 4 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -96,7 +94,7 @@ function MyProducts() {
 
                     <DataGrid
                         loading={isLoading}
-                        rows={data || 0}
+                        rows={data || []}
                         rowCount={data ? data.length : 0}
                         columns={columns}
                         autoHeight
@@ -108,8 +106,7 @@ function MyProducts() {
                         onPaginationModelChange={setPaginationModel}
                         sortModel={sortModel}
                         onSortModelChange={setSortModel}
-                        filterModel={filterModel}
-                        onFilterModelChange={setFilterModel}
+                        disableColumnFilter
                     />
                 </Box>
             </UnloggedLayout>

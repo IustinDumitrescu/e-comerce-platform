@@ -60,7 +60,7 @@ class OrderHandler
                 $em->persist(
                     $sellerNot = (new Notification())
                      ->setUser($sellerOrder->getSeller())
-                     ->setMessage("You ordered a new item !")
+                     ->setMessage("A new item has been ordered!")
                      ->setType(NotificationType::SELLER_NEW_ORDER)
                      ->setCreatedAt((new \DateTime()))
                      ->setUpdatedAt(null)
@@ -81,7 +81,8 @@ class OrderHandler
                     data: json_encode([
                         "id" => $not->getId(),
                         "message" => $not->getMessage(),
-                        "createdAt" => $not->getCreatedAt()->format('Y-m-d')
+                        "createdAt" => $not->getCreatedAt()->format('Y-m-d'),
+                        "type" => $not->getType()->value
                     ])
                 );
 

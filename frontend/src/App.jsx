@@ -12,13 +12,13 @@ function App() {
         <CssBaseline/>
         <BrowserRouter>
           <Routes>
-              {routes.map((route, idx) => (
-                <Route 
-                  path={route.path} 
-                  element={<route.component/>} 
-                  key={'route_' + idx}
-                />
-              ))}
+                {routes.map((route, idx) => (
+                    <Route 
+                      path={route.path} 
+                      element={<route.component {...(route.params ?? {})} />} 
+                      key={'route_' + idx}
+                    />)
+                )}
                <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
          </BrowserRouter>

@@ -16,7 +16,7 @@ import {
   ListItemIcon,
   ListItemButton,
   Tooltip,
-  Badge
+  Badge,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -25,12 +25,14 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { Link, useLocation } from 'react-router-dom';
 import { paths } from '../config/routes';
 import { useState } from 'react';
 import useCart from '../hooks/useCart';
 import useNotifications from '../hooks/useNotifications';
 import useMercure from '../hooks/useMercure';
+import { useSnackbar } from 'notistack';
 
 const drawerWidth = 240;
 
@@ -40,6 +42,22 @@ export default function Navbar({ user, logout }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { cartItems } = useCart();
   const { notifications, addNotification} = useNotifications();
+  const { enqueueSnackbar } = useSnackbar();
+
+  useMercure(
+    user ? [`/user/${user.id}/notifications`]: [], 
+    (result) => {
+      addNotification(result);
+
+      enqueueSnackbar(result.message, {
+        variant: result.type !== 'BUYER_NEW_ORDER' ? 'info' : 'success',
+        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+      });
+    }
+  );
+
+  const buyerBadgeCount = notifications.filter(n => n.type === 'BUYER_NEW_ORDER' && !n.read).length;
+  const sellerBadgeCount = notifications.filter(n => n.type === 'SELLER_NEW_ORDER' && !n.read).length;
 
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -57,7 +75,22 @@ export default function Navbar({ user, logout }) {
     { text: 'Dashboard', path: paths.dashboard, icon: <DashboardIcon color='primary'/> },
     { text: 'My Products', path: paths.myProducts, icon: <Inventory2Icon color='primary'/> },
     { text: 'Add Product', path: paths.newProduct, icon: <AddBoxIcon color='primary'/> },
-    { text: 'My Orders', path: paths.myOrders, icon: <ReceiptLongIcon color='primary'/> },
+    { 
+      text: 'Orders I Bought', 
+      path: paths.buyerOrders, 
+      icon: 
+        <Badge badgeContent={buyerBadgeCount} color="error" invisible={buyerBadgeCount === 0}>
+          <ReceiptLongIcon color="primary" />
+        </Badge>
+    },
+    { 
+      text: 'Orders I Sold', 
+      path: paths.sellerOrders, 
+      icon:  
+      <Badge badgeContent={sellerBadgeCount} color="error" invisible={sellerBadgeCount === 0}>
+        <StorefrontIcon color="primary" />
+      </Badge>
+    }
   ];
 
   const cartQuantity = (() => {
@@ -71,14 +104,6 @@ export default function Navbar({ user, logout }) {
 
     return total;
   })();
-
-  useMercure(
-    user ? [`/user/${user.id}/notifications`]: [], 
-    (result) => {
-      addNotification(result)
-      alert(result.message);
-    }
-  );
 
   return (
     <>

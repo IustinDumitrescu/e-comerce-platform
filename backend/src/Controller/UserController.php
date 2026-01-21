@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Notification;
 use App\Entity\User;
+use App\Repository\NotificationRepository;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class UserController extends AbstractController 
 {
-     #[Route(path: '/api/me', name: 'api_me', methods:['GET'])]
+    #[Route(path: '/api/me', name: 'api_me', methods:['GET'])]
     public function me() 
     {
         $user = $this->getUser();
@@ -28,6 +30,55 @@ class UserController extends AbstractController
             "roles" => $user->getRoles(),
             "name" => $user->getName()
         ]);
+    }
+
+    #[Route(path: '/api/notifications/read', name: 'api_notifications_read', methods: ['POST'])]
+    public function readNotification(Request $request, NotificationRepository $notificationRepository) 
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return new JsonResponse([], 401);
+        }
+ 
+        $data = json_decode($request->getContent(), true);
+
+        if (
+            empty($data["id"]) 
+            || !($notification = $notificationRepository->findOneBy(["user" => $user, "id" => $data["id"]]))
+        ) {
+            return new JsonResponse([], 401);
+        }
+
+        $notificationRepository->save($notification->setRead(true));
+
+        return new JsonResponse([]);
+    }
+
+
+    #[Route(path: '/api/notifications', name: 'api_notifications', methods:['GET'])]
+    public function notifications(NotificationRepository $notificationRepository) 
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return new JsonResponse([], 401);
+        }
+
+        $not = $notificationRepository->findBy(["user" => $user, "read" => false]);
+
+        if (empty($not)) {
+            return new JsonResponse([]);
+        }
+
+        return new JsonResponse(
+            array_map(static fn(Notification $not) => [
+                "id" => $not->getId(),
+                "type" => $not->getType()->value,
+                "createdAt" => $not->getCreatedAt()->format('d.m.Y'),
+                "data" => $not->getData()
+            ], $not)
+        );
     }
 
     #[Route('/api/register', name: 'api_register', methods:['POST'])]

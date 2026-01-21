@@ -79,7 +79,7 @@ function Home() {
             ))}
         </Grid>  
 
-        {!loading && products.length === 0 && (
+        {!loading && products.products.length === 0 && (
           <Stack alignItems="center" mt={6}>
             <Typography variant="h6" color="text.secondary">
               No products available yet.
