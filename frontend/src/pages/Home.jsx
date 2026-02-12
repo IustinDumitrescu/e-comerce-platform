@@ -14,6 +14,7 @@ function Home() {
     products: [],
     totalProducts: 0
   });
+  
   const { getProducts, loading } = useFindAllProducts();
   const navigate = useNavigate();
   const { addCartItem } = useCart();

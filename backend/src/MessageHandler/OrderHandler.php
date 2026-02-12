@@ -82,7 +82,8 @@ class OrderHandler
                         "id" => $not->getId(),
                         "message" => $not->getMessage(),
                         "createdAt" => $not->getCreatedAt()->format('Y-m-d'),
-                        "type" => $not->getType()->value
+                        "type" => $not->getType()->value,
+                        "data" => $not->getData()
                     ])
                 );
 

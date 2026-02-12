@@ -15,6 +15,7 @@ use App\Repository\ProductCategoryRepository;
 use App\Repository\ProductRepository;
 use App\Repository\SellerOrderRepository;
 use App\Enum\OrderType;
+use App\Repository\OrderItemRepository;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -34,7 +35,8 @@ class ProductService
         private readonly ProductRepository $productRepository,
         private readonly OrderRepository $orderRepository,
         private readonly MessageBusInterface $meesageBus,
-        private readonly SellerOrderRepository $sellerOrderRepository
+        private readonly SellerOrderRepository $sellerOrderRepository,
+        private readonly OrderItemRepository $orderItemRepository
     )
     {
     }
@@ -295,6 +297,45 @@ class ProductService
         return null;
     }
 
+    public function getOrder(int $id, string $type): ?array 
+    {
+        if ($type === OrderType::SOLD->value) {
+            $order = $this->sellerOrderRepository->find($id);
+
+            if (is_null($order)) {
+                return $order;
+            }
+
+            $normalizedOrder = $this->normalizeOrders([$order])[0];
+
+            $normalizedOrder["orderItems"] = $this->normalizeOrderItems(
+                $this->orderItemRepository->findBy(["sellerOrder" => $order])
+            );   
+
+            return $normalizedOrder;
+        }
+
+        $order = $this->orderRepository->find($id);
+
+        if (is_null($order)) {
+            return $order;
+        }
+
+        $normalized = $this->normalizeOrders([$order])[0];
+
+        $sellerOrder = $this->sellerOrderRepository->findBy(["order" => $order]);
+
+        $normalized["orderItems"] = !empty($sellerOrder) 
+            ? $this->normalizeOrderItems(
+                $this->orderItemRepository->findBy([
+                    "sellerOrder" => array_map(static fn(SellerOrder $order) => $order->getId(), $sellerOrder)
+                ])
+            )
+            : [];    
+            
+        return $normalized;
+    }
+
     public function invalidateCache(): void
     {
         $this->cache->delete('category_list'); // clear cache
@@ -399,5 +440,26 @@ class ProductService
             "createdAt" => $order->getCreatedAt()->format('d.m.Y'),
             "updateAt" => $order->getUpdatedAt()?->format('d.m.Y')
         ], $orders);
+    }
+
+    private function normalizeOrderItems(array $orderItems): array
+    {
+        if (empty($orderItems)) {
+            return [];
+        }
+
+        return array_map(static fn (OrderItem $orderI) => [
+            "id" => $orderI->getId(),
+            "quantity" => $orderI->getQuantity(),
+            "product" => [
+                "title" => $orderI->getProduct()->getTitle(),
+                "description" => $orderI->getProduct()->getDescription(),
+                "image" => $orderI->getProduct()->getImage(),
+                "category" => $orderI->getProduct()->getProductCategory()->getName(),
+                "price" => $orderI->getProduct()->getPrice()
+            ],
+            "createdAt" => $orderI->getCreatedAt()->format('d.m.Y'),
+            "price" => $orderI->getPrice()
+        ], $orderItems);
     }
 }

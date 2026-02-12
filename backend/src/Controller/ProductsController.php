@@ -37,6 +37,36 @@ class ProductsController extends AbstractController
         return $response;
     }
 
+     #[Route(path: '/api/orders-{type}/{id}', name: 'user_order_type', methods: ['GET'], requirements:["id" => "\d+"])]
+    public function order(
+        ProductService $productService,
+        string $type,
+        int $id 
+    )
+    {
+        $user = $this->getUser();
+
+        $orderType = OrderType::tryFrom($type);
+
+        if (!$user || !$orderType) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'You must be logged in to place an order'
+            ], 401); // 401 Unauthorized
+        }
+
+        $order = $productService->getOrder($id, $type);
+
+        if (empty($order)) {
+             return $this->json([
+                'status' => 'error',
+                'message' => 'Order not found'
+            ], 404); // 404 Not Found
+        }
+
+        return new JsonResponse($order);
+    }
+
     #[Route(path: '/api/orders-{type}', name: 'user_orders', methods: ['GET'])]
     public function orders(
         ProductService $productService,

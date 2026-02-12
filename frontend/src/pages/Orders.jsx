@@ -10,8 +10,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import useNotifications from "../hooks/useNotifications";
 
 function Orders({type}) {
-    console.log(type);
-
     const navigate = useNavigate();
     const { notifications, markAsRead} = useNotifications();
 
@@ -72,7 +70,10 @@ function Orders({type}) {
                                 size="medium"     
                                 color="primary"
                                 onClick={() => {
-                                    markAsRead(not.id);
+                                    if (not) {
+                                        markAsRead(not.id);
+                                    }
+
                                     navigate(`/orders-${type.toLowerCase()}/${params.row.id}`);
                                 }}
                             >
