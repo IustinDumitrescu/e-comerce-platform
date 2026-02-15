@@ -27,7 +27,14 @@ services:
       MERCURE_URL: http://mercure/.well-known/mercure
       MERCURE_PUBLIC_URL: http://localhost:3000/.well-known/mercure
       MERCURE_JWT_SECRET: e3jwnWMftQeXDhol76Lrk5/0BXPgUaZREm1ZRXSniVc=
-    command: sh -c "composer install && php-fpm" 
+    command: sh -c "
+       composer install &&
+      echo 'Waiting for PostgreSQL...' &&
+      until php -r \"new PDO('pgsql:host=postgres;port=5432;dbname=mydb', 'myuser', 'mypassword');\"; do
+        sleep 2;
+      done &&
+      php bin/console doctrine:migrations:migrate --no-interaction &&
+      php-fpm" 
 
   nginx:
     image: nginx

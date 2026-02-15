@@ -62,7 +62,11 @@ export default function CartProvider({children}) {
         setStoredCart(newCart);
     }
 
-    const setCartItems = (items) => setCart(items);
+    const setCartItems = (items) => {
+        setCart(items)
+
+        setStoredCart(items);
+    };
 
     return (
         <CartContex.Provider value={{cartItems, addCartItem, removeCartItem, setCartItems, deleteCartItem}}>

@@ -72,7 +72,7 @@ export default function Navbar({ user, logout }) {
   const initials = user?.email?.[0]?.toUpperCase() ?? '?';
 
   const sidebarItems = [
-    { text: 'Dashboard', path: paths.dashboard, icon: <DashboardIcon color='primary'/> },
+    { text: 'Shop now', path: paths.productListing, icon: <DashboardIcon color='primary'/> },
     { text: 'My Products', path: paths.myProducts, icon: <Inventory2Icon color='primary'/> },
     { text: 'Add Product', path: paths.newProduct, icon: <AddBoxIcon color='primary'/> },
     { 
