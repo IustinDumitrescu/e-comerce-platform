@@ -1,77 +1,81 @@
-🛒 E-Commerce Marketplace
+# 🛒 E-Commerce Marketplace Demo
 
-A full-stack online marketplace where users can register, list products, and purchase products from each other.
+**Portfolio Project / Technical Demo for Recruiters**  
 
-Each user can act as both a buyer and a seller. Orders are processed synchronously, while order-related notifications are handled asynchronously via a queue and delivered in real time. The entire application is containerized and reverse-proxied through Nginx.
+A full-stack online marketplace where users can register, list products, and purchase products from each other. This project demonstrates modern full-stack development, containerized architecture, asynchronous notifications, and real-time updates — designed to be **production-ready and scalable**.
 
-🚀 Quick Start (Test the App)
+---
+
+## 🚀 Quick Start (Test the App)
 
 Follow these simple steps to run the application locally:
 
-Install Docker: Get Docker
+1. **Install Docker**: [Get Docker](https://www.docker.com/get-started)  
+2. **Clone the repository**:
 
-Clone the repository:
-
+```bash
 git clone https://github.com/IustinDumitrescu/e-comerce-platform.git
 cd e-comerce-platform
 
-Start the application:
-
-docker-compose up --build
+3. **Start the application: docker compose up --build
 
 Everything runs automatically:
 
-PostgreSQL database is created
+    ->PostgreSQL database initializes
 
-Doctrine migrations are executed
+    ->Doctrine migrations are applied
 
-Initial product categories are seeded
+    ->Initial product categories are seeded
 
-Backend (Symfony) starts
+    ->Backend API (Symfony + PHP-FPM) starts
 
-Frontend (Vite + React) starts
+    ->Messenger worker starts consuming order notifications
 
-RabbitMQ and Mercure initialize
+    ->RabbitMQ and Mercure initialize
 
-Nginx reverse proxy routes traffic
+    ->Nginx reverse proxy routes all traffic
 
 Open your browser to explore the platform.
 
-🌐 Application URLs
-Service	URL
-
-Backend (via Nginx)	http://localhost:8080
+🌐 Application URLs:
+| Service             | URL                                              |
+| ------------------- | ------------------------------------------------ |
+| Frontend            | [http://localhost:5173](http://localhost:5173)   |
+| Backend (via Nginx) | [http://localhost:8080](http://localhost:8080)   |
+| RabbitMQ UI         | [http://localhost:15672](http://localhost:15672) |
+| Mercure Hub         | [http://localhost:3000](http://localhost:3000)   |
 
 Default RabbitMQ credentials:
+    guest / guest
 
-guest / guest
 🧱 Tech Stack
 Frontend
 
-Vite + React
-Handles user authentication, product browsing, order placement, and real-time notifications.
+    ->Vite + React
+      Handles user authentication, product browsing, order placement, and real-time updates.
 
 Backend
 
-Symfony (PHP)
-Provides REST API for authentication, product management, synchronous order processing, and dispatching order notifications.
+    ->Symfony (PHP)
+      Provides REST API for authentication, product management, synchronous order processing, and dispatching order notifications.
 
 Database
 
-PostgreSQL
-Stores users, products, orders, categories, and related entities. Migrations run automatically on startup.
+    ->PostgreSQL
+    Stores users, products, orders, categories, and related entities. Database migrations are applied automatically on startup.
 
 Queue & Notifications
 
-RabbitMQ + Symfony Messenger – queues order notifications
+    ->RabbitMQ + Symfony Messenger – queues order-related notifications
 
-Mercure – pushes real-time notifications to connected users
+    ->Mercure – delivers real-time notifications to connected users
 
 Reverse Proxy
 
-Nginx – routes traffic to frontend, backend, and Mercure, serving as the single entry point.
+    ->Nginx – routes frontend, backend, and Mercure traffic, serving as the single entry point
 
 🏗 Architecture Overview
+
 Client Browser
       ↓
      Nginx (Reverse Proxy)
@@ -90,45 +94,42 @@ Symfony Messenger
       ↓
 RabbitMQ
       ↓
-Worker
+Worker Container
       ↓
 Mercure
       ↓
-Frontend receives real-time update
+Frontend receives real-time notification
+
+🐳 Dockerized Environment
+
+Backend and frontend run in separate containers
+
+Messenger worker runs in its own container, consuming notifications
+
+PostgreSQL, RabbitMQ, and Mercure run in dedicated containers
+
+Nginx acts as a reverse proxy for clean traffic routing
+
+Stop the application: docker compose down
+
+Remove volumes for a fresh start: docker compose down -v   
+
 🎯 Project Highlights
 
-Full-stack online marketplace
+Full-stack online marketplace demo
 
 Users can register, list products, place orders
 
-Synchronous order handling
+Synchronous order handling with asynchronous notifications
 
-Asynchronous order notifications via RabbitMQ + Mercure
-
-Real-time notifications for users
+Real-time notifications via Mercure
 
 Containerized architecture with Docker
 
-Reverse proxy with Nginx
+Separate worker container for order notifications
+
+Reverse proxy via Nginx for production-ready structure
 
 Automated database migrations and seed data
 
-Developer-friendly startup: one command to run the entire app
-
-🧹 Stop the Application
-docker compose down
-
-Remove containers and database volume for a clean start:
-
-docker compose down -v
-📝 Notes for Developers
-
-Backend container waits for the database to be ready before running migrations
-
-Initial product categories are seeded automatically
-
-Orders are handled synchronously; only notifications are asynchronous
-
-Nginx ensures all traffic is routed correctly to the appropriate services
-
-RabbitMQ handles queueing of notification messages, which are published to Mercure for real-time delivery
+Designed to showcase scalable and maintainable architecture
