@@ -435,7 +435,9 @@ class ProductService
 
         return array_map(static fn (Order|SellerOrder $order) => [
             "id" => $order->getId(),
-            "price" => is_a($order, Order::class) ? $order->getPrice(): $order->getSubtotal(),
+            "price" => is_a($order, Order::class) 
+                ? $order->getPrice()
+                : $order->getSubtotal(),
             "status" => $order->getStatus()->value,
             "createdAt" => $order->getCreatedAt()->format('d.m.Y'),
             "updateAt" => $order->getUpdatedAt()?->format('d.m.Y')

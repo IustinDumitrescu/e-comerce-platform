@@ -51,6 +51,8 @@ class ProductRepository extends ServiceEntityRepository
         $this->addProductsQueryParameters($qb, $parameters);
 
         return $qb
+            ->addSelect('PARTIAL c.{id, name}')
+            ->leftJoin('p.productCategory', 'c')
             ->orderBy('p.' . $orderBy, $order)
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
@@ -90,6 +92,8 @@ class ProductRepository extends ServiceEntityRepository
 
         return $this->createQueryBuilder('p')
             ->select('p')
+            ->leftJoin('p.productCategory', 'c')
+            ->addSelect('PARTIAL c.{id, name}')
             ->where('p.owner = :owner')
             ->setParameter('owner', $owner)
             ->setMaxResults($limit)
